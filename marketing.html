@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Offline AI Reminder</title>
+<meta name="description" content="A reminder app for iPhone and iPad with a calendar that shows the past, checkboxes and a score — and an assistant that runs entirely on your device. No account, no network.">
+<style>
+  :root {
+    --bg:#000; --surface:#0d0e10; --line:#2a2d32; --ink:#fff;
+    --ink-2:#9ba2aa; --ink-3:#676e76;
+    --metal:linear-gradient(135deg,#fff6dd 0%,#c9b274 28%,#f6e9c6 52%,#9a8450 78%,#e0ce9c 100%);
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"SF Pro Text",Segoe UI,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:760px; margin:0 auto; padding:0 24px 96px; }
+  header { padding:88px 0 56px; text-align:center; }
+  .mark { width:96px; height:96px; margin:0 auto 32px; border-radius:50%;
+          border:1px solid var(--line); display:block; }
+  h1 {
+    font-size:clamp(34px,7vw,52px); line-height:1.1; margin:0 0 18px;
+    letter-spacing:-0.02em; font-weight:600;
+    background:var(--metal); -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .lede { font-size:19px; color:var(--ink-2); margin:0 auto; max-width:30em; }
+  h2 {
+    font-size:13px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-3); margin:64px 0 18px; font-weight:600;
+  }
+  .card {
+    background:var(--surface); border:1px solid var(--line); border-radius:20px;
+    padding:26px 28px; margin:14px 0;
+  }
+  .card h3 { margin:0 0 8px; font-size:18px; font-weight:600; }
+  .card p  { margin:0; color:var(--ink-2); }
+  .says { display:grid; gap:10px; margin:0; padding:0; list-style:none; }
+  .says li {
+    background:var(--surface); border:1px solid var(--line); border-radius:999px;
+    padding:13px 22px; color:var(--ink); font-size:17px;
+  }
+  .says li span { color:var(--ink-3); display:block; font-size:14px; margin-top:2px; }
+  .quiet { color:var(--ink-3); font-size:14px; }
+  footer { border-top:1px solid var(--line); margin-top:72px; padding-top:28px; color:var(--ink-3); font-size:14px; }
+  a { color:var(--ink); }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#fff; --surface:#f4f5f7; --line:#e2e4e8; --ink:#000; --ink-2:#565c63; --ink-3:#8a9097;
+            --metal:linear-gradient(135deg,#8a6e26 0%,#3a2d0c 28%,#6e5718 52%,#241c06 78%,#5a4714 100%); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+      <defs>
+        <clipPath id="disc"><circle cx="50" cy="50" r="50"/></clipPath>
+        <clipPath id="lh"><rect x="0" y="0" width="50" height="100"/></clipPath>
+        <clipPath id="rh"><rect x="50" y="0" width="50" height="100"/></clipPath>
+        <!-- Both panels are lit from the same corner, or the seam reads as two
+             pictures rather than one cut object. -->
+        <linearGradient id="silver" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0"    stop-color="#fafbfc"/>
+          <stop offset="0.30" stop-color="#c6ccd3"/>
+          <stop offset="0.55" stop-color="#edf0f3"/>
+          <stop offset="0.78" stop-color="#949ba3"/>
+          <stop offset="1"    stop-color="#d5dae0"/>
+        </linearGradient>
+        <linearGradient id="gold" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0"    stop-color="#fbedcb"/>
+          <stop offset="0.30" stop-color="#d9b75f"/>
+          <stop offset="0.55" stop-color="#f3dfa8"/>
+          <stop offset="0.78" stop-color="#a8863a"/>
+          <stop offset="1"    stop-color="#e4c888"/>
+        </linearGradient>
+        <linearGradient id="on-silver" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0"    stop-color="#8c6d1e"/>
+          <stop offset="0.35" stop-color="#5c4710"/>
+          <stop offset="0.65" stop-color="#a6832c"/>
+          <stop offset="1"    stop-color="#513f0c"/>
+        </linearGradient>
+        <linearGradient id="on-gold" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0"    stop-color="#555d66"/>
+          <stop offset="0.35" stop-color="#262b30"/>
+          <stop offset="0.65" stop-color="#6a737c"/>
+          <stop offset="1"    stop-color="#1e2227"/>
+        </linearGradient>
+      </defs>
+      <g clip-path="url(#disc)">
+        <rect x="0" y="0" width="50" height="100" fill="url(#silver)"/>
+        <rect x="50" y="0" width="50" height="100" fill="url(#gold)"/>
+        <g clip-path="url(#lh)">
+          <rect x="21" y="21" width="58" height="58" rx="15" fill="none"
+                stroke="url(#on-silver)" stroke-width="6.2"/>
+          <path d="M34.5 50.5 L44.5 61 L66.5 38.5" fill="none" stroke="url(#on-silver)"
+                stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        <g clip-path="url(#rh)">
+          <rect x="21" y="21" width="58" height="58" rx="15" fill="none"
+                stroke="url(#on-gold)" stroke-width="6.2"/>
+          <path d="M34.5 50.5 L44.5 61 L66.5 38.5" fill="none" stroke="url(#on-gold)"
+                stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </g>
+    </svg>
+    <h1>Reminders that understand you</h1>
+    <p class="lede">A calendar that shows what you actually did, checkboxes, and
+    a score for the things you finish — with an assistant that runs on your
+    device, not on somebody's server.</p>
+  </header>
+
+  <h2>Just say it</h2>
+
+  <ul class="says">
+    <li>"Remind me to call the dentist on Friday at 3"
+        <span>Friday, 3pm, filed under Health — without you choosing any of it</span></li>
+    <li>"Take the pills every day at 9am"
+        <span>A daily rule, not ninety copies of the same row</span></li>
+    <li>"Pay the rent on the 1st"
+        <span>The next 1st, repeating monthly if you say so, filed under Money</span></li>
+    <li>"Push it back an hour"
+        <span>It knows which one you mean, because you were just talking about it</span></li>
+    <li>"What's overdue?"
+        <span>A list you can tick off without leaving the answer</span></li>
+    <li>"How am I doing?"
+        <span>Points, level, streak and last week — every figure the app's own</span></li>
+  </ul>
+
+  <h2>Why it is different</h2>
+
+  <div class="card">
+    <h3>Nothing leaves the device</h3>
+    <p>The language model is inside the app. There is no account, no sign-in and
+    no network code — put the phone in Airplane Mode and every word of it still
+    works, because nothing was ever going anywhere. Most "AI" apps are a text
+    box in front of somebody else's server. This one cannot be.</p>
+  </div>
+
+  <div class="card">
+    <h3>The app does the understanding</h3>
+    <p>"Next Friday", "the 5th", "every other Monday", "end of the month" — all
+    worked out by the app itself, exactly, instantly, and the same way every
+    time. Ask a small language model what those mean and it will answer
+    confidently and differently each time.</p>
+  </div>
+
+  <div class="card">
+    <h3>It tells you what it did</h3>
+    <p>Every date and every number on screen is the app's own. The model adds
+    one sentence underneath, and if that sentence contains a figure it is thrown
+    away before you see it. A reminder app that confidently tells you the wrong
+    day is worse than one that says nothing.</p>
+  </div>
+
+  <h2>A calendar that looks backwards too</h2>
+
+  <div class="card">
+    <h3>The past is half the point</h3>
+    <p>Most calendars only show what is coming. This one shows what happened: a
+    cleared day, a half-done day and a missed day each look different — by shape
+    rather than colour, so it works if you cannot tell them apart. Tap any day,
+    in either direction, and see exactly what was on it.</p>
+  </div>
+
+  <div class="card">
+    <h3>Today is never an accusation</h3>
+    <p>Today is ringed, not marked missed, until the day is actually over. An
+    app that writes you off at nine in the morning is one you stop opening.</p>
+  </div>
+
+  <div class="card">
+    <h3>Late still counts</h3>
+    <p>Tick something off two days late and it is credited to the day it
+    belonged to, which is where you will look for it. A repeating reminder has
+    many days and only the right one is marked.</p>
+  </div>
+
+  <h2>A score you can predict</h2>
+
+  <div class="card">
+    <h3>Points for finishing, more for finishing on time</h3>
+    <p>Five points on low priority, ten on normal, fifteen on high, and five
+    more for getting there before it was due. Un-tick something and the points
+    come back off. Nothing is ever recalculated behind your back.</p>
+  </div>
+
+  <div class="card">
+    <h3>Streaks that are fair</h3>
+    <p>Clear everything due on a day and the day counts. Days in a row are your
+    streak — and a day with nothing due never breaks one. It is not a failure to
+    have a free Sunday, and an app that punishes one is teaching you to invent
+    busywork.</p>
+  </div>
+
+  <div class="card">
+    <h3>The rules are on the screen</h3>
+    <p>Written out in plain words, in the same terms the app uses to compute
+    them. A score nobody can predict is a score nobody trusts.</p>
+  </div>
+
+  <h2>The rest of it</h2>
+
+  <div class="card">
+    <h3>Repeats that match real life</h3>
+    <p>Once, daily, weekly on the days you pick, monthly, yearly — or every
+    other week, or every third day. All-day or at a set time. A heads-up
+    notification from five minutes to a day before, and an optional morning plan
+    and evening review.</p>
+  </div>
+
+  <div class="card">
+    <h3>Six lists, filled in for you</h3>
+    <p>Personal, Work, Health, Home, Study and Money. "Pay the rent" goes to
+    Money, "take the pills" to Health, "put the bins out" to Home — without you
+    choosing, and changeable in one tap when the app guesses wrong.</p>
+  </div>
+
+  <div class="card">
+    <h3>An iPad app, not a big phone app</h3>
+    <p>A sidebar that is always there, and two columns: the month beside the day
+    you are reading, your list beside your score, the filters beside the
+    results. Drawn for the space it has rather than stretched to fill it.</p>
+  </div>
+
+  <div class="card">
+    <h3>Two themes, one object</h3>
+    <p>Black with light gold, white with dark gold, with a polished finish that
+    catches the light rather than a flat wash that does not. The icon is one
+    checkbox cut down the middle — silver on one side, gold on the other, each
+    half wearing the other's metal, with the tick crossing the seam and
+    changing as it goes.</p>
+  </div>
+
+  <div class="card">
+    <h3>It tells you at a civilised hour</h3>
+    <p>Say "remind me to water the plants tomorrow" and you are told at nine in
+    the morning, not at midnight. A day starts at midnight; being told about it
+    does not. The hour is yours to change, and the editor prints it where you
+    make the choice rather than keeping it as a surprise.</p>
+  </div>
+
+  <div class="card">
+    <h3>Readable at your size</h3>
+    <p>Text follows your Text Size setting throughout, and the layout holds
+    together at every step of it. Every control is named for VoiceOver,
+    including the checkbox — which is a separate control from the row, so
+    "open this" and "tick this off" are never the same gesture.</p>
+  </div>
+
+  <h2>What it will never do</h2>
+
+  <div class="card">
+    <h3>The short list</h3>
+    <p>No account. No sign-up. No analytics, no tracking, no advertising
+    identifiers. No network permission and no network code. Nothing you type is
+    stored anywhere but on your device — and a second copy of your list is kept
+    there too, so a damaged file does not cost you your history.</p>
+  </div>
+
+  <p class="quiet">Offline AI Reminder for iPhone and iPad. Requires iOS 17 or
+  later. Built with Llama.</p>
+
+  <footer>
+    <p>Questions, or something the app got wrong:
+    <a href="mailto:sivavimelrajhen@gmail.com">sivavimelrajhen@gmail.com</a></p>
+  </footer>
+
+</div>
+</body>
+</html>
